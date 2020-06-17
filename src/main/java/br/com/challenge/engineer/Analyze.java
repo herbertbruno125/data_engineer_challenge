@@ -138,15 +138,15 @@ public class Analyze implements Serializable {
     }
 
     private void clearOutputDirectorys() throws IOException {
-        deleteDirectory(outputHostsUnicos);
-        deleteDirectory(outputTotalErros404);
-        deleteDirectory(outputTotalErros404Aux);
-        deleteDirectory(outputTotalBytes);
-        deleteDirectory(outputUrlsQueMaisCausaramErro404);
-        deleteDirectory(outputQuantidadeErros404PorDia);
+        Path basePath = new Path(new File(".").getCanonicalPath() + "/src/output/");
+        if (fs.exists(basePath)) {
+            fs.delete(basePath, true);
+        }
+        fs.mkdirs(basePath);
     }
 
     private void setOutputPaths() throws IOException {
+
         outputHostsUnicos = new File(".").getCanonicalPath() + "/src/output/hosts_unicos";
         outputTotalErros404 = new File(".").getCanonicalPath() + "/src/output/total_erros_404";
         outputTotalErros404Aux = new File(".").getCanonicalPath() + "/src/output/total_erros_aux";
@@ -157,12 +157,5 @@ public class Analyze implements Serializable {
 
     private void setInputPath() throws IOException {
         input = sc.textFile(new File(".").getCanonicalPath() + "/src/input/*").persist(StorageLevel.MEMORY_ONLY());
-    }
-
-    private void deleteDirectory(String pathStr) throws IOException {
-        Path path = new Path(pathStr);
-        if (fs.exists(path)) {
-            fs.delete(path, true);
-        }
     }
 }
