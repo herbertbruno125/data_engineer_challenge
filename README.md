@@ -34,4 +34,12 @@ counts . saveAsTextFile ( "hdfs://..." )
 
 O codigo é um contador de palavras, onde o mesmo realiza um mapeamento do arquivo de input encontrado dentro do HDFS, quebrando cada linha por espaco usando o split e em seguinda para cada palavra encontrada o mesmo utiliza como chave e o numero 1 como valor, quando chega no reducer o mesmo conta quantas chaves identicas existe e soma os valores.
 
-  
+
+
+Para esse teste foi utilizado as seguintes tecnologias/ferramentas
+
+* Spark versão 2.4.5
+
+* Maven
+
+* Java versão 8
