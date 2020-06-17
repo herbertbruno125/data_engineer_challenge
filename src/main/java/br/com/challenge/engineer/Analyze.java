@@ -52,8 +52,8 @@ public class Analyze implements Serializable {
         setInputPath();
 
         //Diretórios de saida
+        clearOutputDirectory();
         setOutputPaths();
-        clearOutputDirectorys();
 
     }
 
@@ -137,7 +137,7 @@ public class Analyze implements Serializable {
         pairRDD.sortByKey().coalesce(1).saveAsTextFile(outputQuantidadeErros404PorDia);
     }
 
-    private void clearOutputDirectorys() throws IOException {
+    private void clearOutputDirectory() throws IOException {
         Path basePath = new Path(new File(".").getCanonicalPath() + "/src/output/");
         if (fs.exists(basePath)) {
             fs.delete(basePath, true);
