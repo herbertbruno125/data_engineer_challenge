@@ -23,3 +23,15 @@ RDD são abstrações de dados no spark, Desmistificando: Resilient por serem to
   
   O GroupByKey envia todas as todas informações pela rede para os jobs de redução isso pode ocasionar falhas e lentidão no processo perdendo assim eficiencia, o reduceByKey combina as informações em cada partição em seguinda envia somente uma chave de cada partição pela rede 
   
+  
+  
+*  Explique o que o código Scala abaixo faz.
+val textFile = sc . textFile ( "hdfs://..." )
+val counts = textFile . flatMap ( line => line . split ( " " ))
+. map ( word => ( word , 1 ))
+. reduceByKey ( _ + _ )
+counts . saveAsTextFile ( "hdfs://..." )
+
+O codigo é um contador de palavras, onde o mesmo realiza um mapeamento do arquivo de input encontrado dentro do HDFS, quebrando cada linha por espaco usando o split e em seguinda para cada palavra encontrada o mesmo utiliza como chave e o numero 1 como valor, quando chega no reducer o mesmo conta quantas chaves identicas existe e soma os valores.
+
+  
