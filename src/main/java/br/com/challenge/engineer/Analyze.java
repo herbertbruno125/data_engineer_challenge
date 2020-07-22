@@ -48,6 +48,9 @@ public class Analyze implements Serializable {
         sc.hadoopConfiguration().set("mapreduce.input.fileinputformat.input.dir.recursive", "true");
         fs = FileSystem.get(sc.hadoopConfiguration());
 
+        sc.hadoopConfiguration().addResource(new Path(new File(".").getCanonicalPath() + "/src/main/resources/teste.xml"));
+
+        sc.hadoopConfiguration().get("teste-input");
         //Diretório de entrada
         setInputPath();
 
@@ -64,16 +67,15 @@ public class Analyze implements Serializable {
             String line = null;
             if (matcher.find()) line = matcher.group();
             return new Tuple2<>(line, 1);
-        }).reduceByKey(Integer::sum).persist(StorageLevel.MEMORY_ONLY());
+        }).reduceByKey(Integer::sum);
 
-        System.out.println(new File("/").getCanonicalPath());
         outputMap.saveAsTextFile(outputHostsUnicos);
     }
 
     private void totalErros404() throws IOException {
         System.out.println("\n\n>>>>>>> START OF PROGRAM <<<<<<<\n\n");
 
-        JavaRDD<String> result = input.filter(line -> line.contains(" 404 ")).coalesce(1).persist(StorageLevel.MEMORY_ONLY());
+        JavaRDD<String> result = input.filter(line -> line.contains(" 404 ")).coalesce(1);
 
         result.saveAsTextFile(outputTotalErros404Aux);
 
@@ -97,7 +99,7 @@ public class Analyze implements Serializable {
                 return new Tuple2<>(1, 0);
             }
 
-        }).reduceByKey(Integer::sum).persist(StorageLevel.MEMORY_ONLY());
+        }).reduceByKey(Integer::sum);
 
         pairRDD.coalesce(1).saveAsTextFile(outputTotalBytes);
     }
@@ -105,7 +107,7 @@ public class Analyze implements Serializable {
     private void uRLsQueMaisCausaramErro404() {
         Pattern pattern = Pattern.compile("\"(.*?)\"");
 
-        JavaRDD<String> input = sc.textFile(outputTotalErros404Aux).persist(StorageLevel.MEMORY_ONLY());
+        JavaRDD<String> input = sc.textFile(outputTotalErros404Aux);
 
         JavaPairRDD<String, Integer> pairRDD = input.mapToPair(t -> {
             Matcher matcher = pattern.matcher(t);
