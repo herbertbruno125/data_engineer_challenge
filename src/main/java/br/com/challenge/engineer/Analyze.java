@@ -50,7 +50,6 @@ public class Analyze implements Serializable {
 
         sc.hadoopConfiguration().addResource(new Path(new File(".").getCanonicalPath() + "/src/main/resources/teste.xml"));
 
-        sc.hadoopConfiguration().get("teste-input");
         //Diretório de entrada
         setInputPath();
 
