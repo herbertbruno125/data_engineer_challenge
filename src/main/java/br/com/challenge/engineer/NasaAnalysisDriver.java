@@ -65,6 +65,7 @@ public class NasaAnalysisDriver implements Serializable {
             totalBytes(acessLogInputPath);
             uRLsQueMaisCausaramErro404();
             quantidadeErros404PorDia();
+            acessLogInputPath.unpersist();
         } catch (Exception e) {
             e.printStackTrace();
             e.getCause();
