@@ -2,7 +2,7 @@ package br.com.challenge.engineer;
 
 import java.util.regex.Pattern;
 
-public class NasaAux {
+public class NasaAnalysisAux {
 
     public static Pattern hostsUnicosPattern = Pattern.compile("^\\S*");
     public static Pattern totalBytesPattern = Pattern.compile("[\\d-]+$");

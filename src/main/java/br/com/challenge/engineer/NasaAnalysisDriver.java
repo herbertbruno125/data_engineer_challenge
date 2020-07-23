@@ -18,23 +18,23 @@ import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 
-public class NasaAnalysis implements Serializable {
+public class NasaAnalysisDriver implements Serializable {
 
-    public static final Logger LOG = Logger.getLogger(NasaAnalysis.class);
+    public static final Logger LOG = Logger.getLogger(NasaAnalysisDriver.class);
     private static JavaSparkContext sc;
     private static FileSystem fs;
     private static JavaRDD<String> acessLogInputPath;
     private static String[] arguments;
 
 
-    public NasaAnalysis() throws Exception {
+    public NasaAnalysisDriver() throws Exception {
         init();
 
         start();
     }
 
     public static void main(String[] args) throws Exception {
-        NasaAnalysis nasaAnalysis = new NasaAnalysis();
+        NasaAnalysisDriver nasaAnalysisDriver = new NasaAnalysisDriver();
         arguments = args;
 
     }
@@ -76,14 +76,14 @@ public class NasaAnalysis implements Serializable {
         System.out.println("\n\n>>>>>>> START OF APPLICATION: HOSTS UNICOS <<<<<<<\n\n");
 
         JavaPairRDD<String, Integer> outputMap = input.mapToPair(t -> {
-            Matcher matcher = NasaAux.hostsUnicosPattern.matcher(t);
+            Matcher matcher = NasaAnalysisAux.hostsUnicosPattern.matcher(t);
             String line = null;
             if (matcher.find()) line = matcher.group();
             return new Tuple2<>(line, 1);
         }).reduceByKey(Integer::sum);
-        outputMap.saveAsTextFile(NasaAux.outputHostsUnicos);
+        outputMap.saveAsTextFile(NasaAnalysisAux.outputHostsUnicos);
         System.out.println("\n\nForam encontrados um total de " + outputMap.count() + " de Hosts Unicos");
-        System.out.println("Para mais detalhes o arquivo de saída encontra-se em: " + NasaAux.outputHostsUnicos);
+        System.out.println("Para mais detalhes o arquivo de saída encontra-se em: " + NasaAnalysisAux.outputHostsUnicos);
 
         System.out.println("\n\n>>>>>>> END OF PROGRAM <<<<<<<\n\n");
         outputMap.unpersist();
@@ -94,14 +94,14 @@ public class NasaAnalysis implements Serializable {
     private void totalErros404(JavaRDD<String> input) throws IOException {
         System.out.println("\n\n>>>>>>> START OF APPLICATION: TOTAL ERROS 404 <<<<<<<\n\n");
 
-        JavaRDD<String> result = input.filter(line -> line.contains(NasaAux._404)).coalesce(1);
+        JavaRDD<String> result = input.filter(line -> line.contains(NasaAnalysisAux._404)).coalesce(1);
 
-        result.saveAsTextFile(NasaAux.outputTotalErros404Aux);
+        result.saveAsTextFile(NasaAnalysisAux.outputTotalErros404Aux);
 
         JavaRDD<Long> longJavaRDD = sc.parallelize(Collections.singletonList(result.count()));
-        longJavaRDD.repartition(1).saveAsTextFile(NasaAux.outputTotalErros404);
+        longJavaRDD.repartition(1).saveAsTextFile(NasaAnalysisAux.outputTotalErros404);
         System.out.println("\n\n numero total de errors 404 = " + result.count());
-        System.out.println("Para mais detalhes o arquivo de saída encontra-se em: " + NasaAux.outputTotalErros404);
+        System.out.println("Para mais detalhes o arquivo de saída encontra-se em: " + NasaAnalysisAux.outputTotalErros404);
         System.out.println("\n\n>>>>>>> END OF PROGRAM <<<<<<<\n\n");
         result.unpersist();
     }
@@ -109,18 +109,18 @@ public class NasaAnalysis implements Serializable {
     private void totalBytes(JavaRDD<String> input) {
         System.out.println("\n\n>>>>>>> START OF APPLICATION: TOTAL BYTES <<<<<<<\n\n");
         JavaPairRDD<Integer, Integer> pairRDD = input.mapToPair(t -> {
-            Matcher matcher = NasaAux.totalBytesPattern.matcher(t);
+            Matcher matcher = NasaAnalysisAux.totalBytesPattern.matcher(t);
             String line = null;
             if (matcher.find()) line = matcher.group();
             try {
-                return new Tuple2<>(1, Integer.parseInt(StringUtils.defaultString(line, NasaAux._ZERO)));
+                return new Tuple2<>(1, Integer.parseInt(StringUtils.defaultString(line, NasaAnalysisAux._ZERO)));
             } catch (Exception e) {
                 return new Tuple2<>(1, 0);
             }
         }).reduceByKey(Integer::sum);
-        pairRDD.coalesce(1).saveAsTextFile(NasaAux.outputTotalBytes);
+        pairRDD.coalesce(1).saveAsTextFile(NasaAnalysisAux.outputTotalBytes);
         System.out.println("\n\n numero total de Bytes = " + pairRDD.take(1));
-        System.out.println("Para mais detalhes o arquivo de saída encontra-se em: " + NasaAux.outputTotalBytes);
+        System.out.println("Para mais detalhes o arquivo de saída encontra-se em: " + NasaAnalysisAux.outputTotalBytes);
         System.out.println("\n\n>>>>>>> END OF PROGRAM <<<<<<<\n\n");
         pairRDD.unpersist();
     }
@@ -129,24 +129,24 @@ public class NasaAnalysis implements Serializable {
     private void uRLsQueMaisCausaramErro404() {
         System.out.println("\n\n>>>>>>> START OF APPLICATION: URLS QUE MAIS CAUSARAM ERRO 404 <<<<<<<\n\n");
 
-        JavaRDD<String> totalErros404AuxInput = sc.textFile(NasaAux.outputTotalErros404Aux);
+        JavaRDD<String> totalErros404AuxInput = sc.textFile(NasaAnalysisAux.outputTotalErros404Aux);
 
         JavaPairRDD<String, Integer> pairRDD = totalErros404AuxInput.mapToPair(t -> {
-            Matcher matcher = NasaAux.urlMaisCausaramError404Pattern.matcher(t);
+            Matcher matcher = NasaAnalysisAux.urlMaisCausaramError404Pattern.matcher(t);
             String line = null;
             if (matcher.find()) line = matcher.group();
             line = line.replaceAll("GET ", "");
             return new Tuple2<>(line, 1);
         }).reduceByKey(Integer::sum);
 
-        List<Object> take = pairRDD.map(Tuple2::swap).mapToPair(Utils.pairFunction).sortByKey(false).take(5);
+        List<Object> take = pairRDD.map(Tuple2::swap).mapToPair(NasaAnalysisUtils.pairFunction).sortByKey(false).take(5);
 
-        sc.parallelize(take).coalesce(1).saveAsTextFile(NasaAux.outputUrlsQueMaisCausaramErro404);
+        sc.parallelize(take).coalesce(1).saveAsTextFile(NasaAnalysisAux.outputUrlsQueMaisCausaramErro404);
         System.out.println("\n\n URLS QUE MAIS CAUSARAM ERRO 404: \n\n");
         for (Object o : take) {
             System.out.println(o);
         }
-        System.out.println("Para mais detalhes o arquivo de saída encontra-se em: " + NasaAux.outputTotalBytes);
+        System.out.println("Para mais detalhes o arquivo de saída encontra-se em: " + NasaAnalysisAux.outputTotalBytes);
         System.out.println("\n\n>>>>>>> END OF PROGRAM <<<<<<<\n\n");
         pairRDD.unpersist();
     }
@@ -154,22 +154,22 @@ public class NasaAnalysis implements Serializable {
 
     private void quantidadeErros404PorDia() {
         System.out.println("\n\n>>>>>>> START OF APPLICATION: QUANTIDADE ERROS 404 POR DIA <<<<<<<\n\n");
-        JavaRDD<String> totalErros404AuxInput = sc.textFile(NasaAux.outputTotalErros404Aux).persist(StorageLevel.MEMORY_ONLY());
+        JavaRDD<String> totalErros404AuxInput = sc.textFile(NasaAnalysisAux.outputTotalErros404Aux).persist(StorageLevel.MEMORY_ONLY());
 
         JavaPairRDD<String, Integer> pairRDD = totalErros404AuxInput.mapToPair(t -> {
-            Matcher matcher = NasaAux.quantidadeErros404PorDiaPattern.matcher(t);
+            Matcher matcher = NasaAnalysisAux.quantidadeErros404PorDiaPattern.matcher(t);
             String line = null;
             if (matcher.find())
                 line = matcher.group();
             return new Tuple2<>(line, 1);
         }).reduceByKey(Integer::sum);
 
-        pairRDD.sortByKey().coalesce(1).saveAsTextFile(NasaAux.outputQuantidadeErros404PorDia);
+        pairRDD.sortByKey().coalesce(1).saveAsTextFile(NasaAnalysisAux.outputQuantidadeErros404PorDia);
         System.out.println("\n\n QUANTIDADE ERROS 404 POR DIA = ");
         for (Object o : pairRDD.collect()) {
             System.out.println(o.toString());
         }
-        System.out.println("Para mais detalhes o arquivo de saída encontra-se em: " + NasaAux.outputTotalBytes);
+        System.out.println("Para mais detalhes o arquivo de saída encontra-se em: " + NasaAnalysisAux.outputTotalBytes);
         System.out.println("\n\n>>>>>>> END OF PROGRAM <<<<<<<\n\n");
         pairRDD.unpersist();
     }
@@ -188,12 +188,12 @@ public class NasaAnalysis implements Serializable {
     }
 
     private void setOutputPaths() throws IOException {
-        NasaAux.outputHostsUnicos = getClass().getClassLoader().getResource("output") + "/hosts_unicos";
-        NasaAux.outputTotalErros404 = getClass().getClassLoader().getResource("output") + "/total_erros_404";
-        NasaAux.outputTotalErros404Aux = getClass().getClassLoader().getResource("output") + "/total_erros_aux";
-        NasaAux.outputTotalBytes = getClass().getClassLoader().getResource("output") + "/output_total_bytes";
-        NasaAux.outputUrlsQueMaisCausaramErro404 = getClass().getClassLoader().getResource("output") + "/URLsQueMaisCausaramErro404";
-        NasaAux.outputQuantidadeErros404PorDia = getClass().getClassLoader().getResource("output") + "/quantidadeErros404PorDia";
+        NasaAnalysisAux.outputHostsUnicos = getClass().getClassLoader().getResource("output") + "/hosts_unicos";
+        NasaAnalysisAux.outputTotalErros404 = getClass().getClassLoader().getResource("output") + "/total_erros_404";
+        NasaAnalysisAux.outputTotalErros404Aux = getClass().getClassLoader().getResource("output") + "/total_erros_aux";
+        NasaAnalysisAux.outputTotalBytes = getClass().getClassLoader().getResource("output") + "/output_total_bytes";
+        NasaAnalysisAux.outputUrlsQueMaisCausaramErro404 = getClass().getClassLoader().getResource("output") + "/URLsQueMaisCausaramErro404";
+        NasaAnalysisAux.outputQuantidadeErros404PorDia = getClass().getClassLoader().getResource("output") + "/quantidadeErros404PorDia";
     }
 
 

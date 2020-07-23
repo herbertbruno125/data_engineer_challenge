@@ -3,7 +3,7 @@ package br.com.challenge.engineer;
 import org.apache.spark.api.java.function.PairFunction;
 import scala.Tuple2;
 
-public class Utils {
+public class NasaAnalysisUtils {
 
     public static final PairFunction pairFunction = new PairFunction<Object, Integer, String>() {
         @Override
