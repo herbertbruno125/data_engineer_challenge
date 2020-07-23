@@ -1,3 +1,4 @@
+/*
 package br.com.challenge.engineer;
 
 import org.apache.hadoop.fs.FileSystem;
@@ -25,9 +26,11 @@ public class Analyze implements Serializable {
     protected String outputHostsUnicos, outputTotalErros404, outputTotalErros404Aux, outputTotalBytes,
             outputUrlsQueMaisCausaramErro404, outputQuantidadeErros404PorDia;
     private FileSystem fs;
+    private static String[] arguments;
 
     public static void main(String[] args) throws IOException {
         Analyze analyze = new Analyze();
+        arguments = args;
         analyze.init(args);
         analyze.hostsUnicos();
         analyze.totalErros404();
@@ -36,7 +39,14 @@ public class Analyze implements Serializable {
         analyze.quantidadeErros404PorDia();
     }
 
-    private void init(String[] args) throws IOException {
+    public Analyze(String[] args) throws IOException {
+
+        init();
+
+        start
+    }
+
+    private void init() throws IOException {
 
         //Configurações do Spark
         conf = new SparkConf().setAppName("data engineer challenge")
@@ -59,7 +69,7 @@ public class Analyze implements Serializable {
 
     }
 
-    private void hostsUnicos() throws IOException {
+    private void hostsUnicos(JavaRDD<String> input) throws IOException {
         Pattern pattern = Pattern.compile("^\\S*");
         JavaPairRDD<String, Integer> outputMap = input.mapToPair(t -> {
             Matcher matcher = pattern.matcher(t);
@@ -71,7 +81,7 @@ public class Analyze implements Serializable {
         outputMap.saveAsTextFile(outputHostsUnicos);
     }
 
-    private void totalErros404() throws IOException {
+    private void totalErros404(JavaRDD<String> input) throws IOException {
         System.out.println("\n\n>>>>>>> START OF PROGRAM <<<<<<<\n\n");
 
         JavaRDD<String> result = input.filter(line -> line.contains(" 404 ")).coalesce(1);
@@ -84,7 +94,7 @@ public class Analyze implements Serializable {
         System.out.println("\n\n>>>>>>> END OF PROGRAM <<<<<<<\n\n");
     }
 
-    private void totalBytes() {
+    private void totalBytes(JavaRDD<String> input) {
         Pattern pattern = Pattern.compile("[\\d-]+$");
 
         JavaPairRDD<Integer, Integer> pairRDD = input.mapToPair(t -> {
@@ -103,7 +113,7 @@ public class Analyze implements Serializable {
         pairRDD.coalesce(1).saveAsTextFile(outputTotalBytes);
     }
 
-    private void uRLsQueMaisCausaramErro404() {
+    private void uRLsQueMaisCausaramErro404(JavaRDD<String> input) {
         Pattern pattern = Pattern.compile("\"(.*?)\"");
 
         JavaRDD<String> input = sc.textFile(outputTotalErros404Aux);
@@ -122,7 +132,7 @@ public class Analyze implements Serializable {
     }
 
 
-    private void quantidadeErros404PorDia() {
+    private void quantidadeErros404PorDia(JavaRDD<String> input) {
         Pattern pattern = Pattern.compile("(([0-9])|([0-2][0-9])|([3][0-1]))\\/(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\\/\\d{4}");
 
         JavaRDD<String> input = sc.textFile(outputTotalErros404Aux).persist(StorageLevel.MEMORY_ONLY());
@@ -160,3 +170,4 @@ public class Analyze implements Serializable {
         input = sc.textFile(new File(".").getCanonicalPath() + "/src/input/*").persist(StorageLevel.MEMORY_ONLY());
     }
 }
+*/
